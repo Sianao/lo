@@ -206,15 +206,16 @@ func ForEachErr[T any](collection []T, callback func(item T, index int) error) e
 	return nil
 }
 
-// ForEachWhile iterates over elements of collection and invokes predicate for each element
-// collection return value decide to continue or break, like do while().
+// ForEachWhile iterates over elements of collection and invokes predicate for each element.
+// It returns true if predicate returns true for every element, or false after the first false result.
 // Play: https://go.dev/play/p/QnLGt35tnow
-func ForEachWhile[T any](collection []T, predicate func(item T, index int) bool) {
+func ForEachWhile[T any](collection []T, predicate func(item T, index int) bool) bool {
 	for i := range collection {
 		if !predicate(collection[i], i) {
-			break
+			return false
 		}
 	}
+	return true
 }
 
 // Times invokes the iteratee n times, returning a slice of the results of each invocation.

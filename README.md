@@ -609,20 +609,22 @@ lop.ForEach([]string{"hello", "world"}, func(x string, _ int) {
 
 ### ForEachWhile
 
-Iterates over collection elements and invokes iteratee for each element collection return value decide to continue or break, like do while().
+Iterates over collection elements and invokes iteratee for each element until false is returned. Returns true when the predicate returns true for every element, or false when any element returns false and iteration stops.
 
 ```go
 list := []int64{1, 2, -42, 4}
 
-lo.ForEachWhile(list, func(x int64, _ int) bool {
+allPositive := lo.ForEachWhile(list, func(x int64, _ int) bool {
 	if x < 0 {
 		return false
 	}
 	fmt.Println(x)
 	return true
 })
+fmt.Println(allPositive)
 // 1
 // 2
+// false
 ```
 
 [[play](https://go.dev/play/p/QnLGt35tnow)]

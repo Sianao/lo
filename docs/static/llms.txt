@@ -216,7 +216,7 @@ Lo is built on a foundation of pragmatic engineering principles that balance pow
 - Reduce: Combine elements into single value
 - ReduceRight: Combine elements from right to left
 - ForEach: Execute function for each element
-- ForEachWhile: Execute function while predicate returns true
+- ForEachWhile: Execute function while predicate returns true and report whether all slice elements satisfy it
 - Times: Execute function n times and collect results
 - Uniq: Remove duplicate elements
 - UniqBy: Remove duplicates by key function

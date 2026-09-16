@@ -823,7 +823,7 @@ func TestForEachWhile(t *testing.T) {
 	var callParams1 []string
 	var callParams2 []int
 
-	ForEachWhile([]string{"a", "b", "c"}, func(item string, i int) bool {
+	allMatched := ForEachWhile([]string{"a", "b", "c"}, func(item string, i int) bool {
 		if item == "c" {
 			return false
 		}
@@ -832,9 +832,25 @@ func TestForEachWhile(t *testing.T) {
 		return true
 	})
 
+	is.False(allMatched)
 	is.Equal([]string{"a", "b"}, callParams1)
 	is.Equal([]int{0, 1}, callParams2)
 	is.IsIncreasing(callParams2)
+
+	var count int
+	allMatched = ForEachWhile([]string{"a", "b"}, func(item string, i int) bool {
+		count++
+		return true
+	})
+
+	is.True(allMatched)
+	is.Equal(2, count)
+
+	allMatched = ForEachWhile([]string{}, func(item string, i int) bool {
+		return false
+	})
+
+	is.True(allMatched)
 }
 
 // TestUniq_small exercises the small-scan path (all collections here are

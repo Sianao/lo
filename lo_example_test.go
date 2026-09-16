@@ -2574,17 +2574,19 @@ func ExampleForEach() {
 func ExampleForEachWhile() {
 	list := []int64{1, 2, -math.MaxInt, 4}
 
-	ForEachWhile(list, func(x int64, _ int) bool {
+	allPositive := ForEachWhile(list, func(x int64, _ int) bool {
 		if x < 0 {
 			return false
 		}
 		fmt.Println(x)
 		return true
 	})
+	fmt.Println(allPositive)
 
 	// Output:
 	// 1
 	// 2
+	// false
 }
 
 func ExampleForEachErr() {
