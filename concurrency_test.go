@@ -9,13 +9,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSynchronize(t *testing.T) {
-	t.Parallel()
-	testWithTimeout(t, 100*time.Millisecond)
-	is := assert.New(t)
+func TestSynchronize(t *testing.T) { //nolint:paralleltest
+	// t.Parallel()
+	testWithTimeout(t, 1000*time.Millisecond)
 
 	// check that callbacks are not executed concurrently
-	{
+	t.Run("callbacks are not executed concurrently", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		start := time.Now()
 
 		wg := sync.WaitGroup{}
@@ -25,7 +27,7 @@ func TestSynchronize(t *testing.T) {
 
 		for i := 0; i < 10; i++ {
 			go s.Do(func() {
-				time.Sleep(5 * time.Millisecond)
+				time.Sleep(50 * time.Millisecond)
 				wg.Done()
 			})
 		}
@@ -33,13 +35,14 @@ func TestSynchronize(t *testing.T) {
 		wg.Wait()
 
 		duration := time.Since(start)
-
-		is.Greater(duration, 50*time.Millisecond)
-		is.Less(duration, 60*time.Millisecond)
-	}
+		is.InDelta(500*time.Millisecond, duration, float64(40*time.Millisecond))
+	})
 
 	// check locker is locked
-	{
+	t.Run("locker is locked", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		mu := &sync.Mutex{}
 		s := Synchronize(mu)
 
@@ -51,19 +54,22 @@ func TestSynchronize(t *testing.T) {
 		Try0(func() {
 			mu.Unlock()
 		})
-	}
+	})
 
 	// check we don't accept multiple arguments
-	{
-		is.PanicsWithValue("unexpected arguments", func() {
+	t.Run("panics on multiple arguments", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
+		is.PanicsWithValue("lo.Synchronize: unexpected arguments", func() {
 			mu := &sync.Mutex{}
 			Synchronize(mu, mu, mu)
 		})
-	}
+	})
 }
 
-func TestAsync(t *testing.T) {
-	t.Parallel()
+func TestAsync(t *testing.T) { //nolint:paralleltest
+	// t.Parallel()
 	testWithTimeout(t, 100*time.Millisecond)
 	is := assert.New(t)
 
@@ -78,18 +84,20 @@ func TestAsync(t *testing.T) {
 
 	select {
 	case result := <-ch:
-		is.Equal(result, 10)
+		is.Equal(10, result)
 	case <-time.After(time.Millisecond):
 		is.Fail("Async should not block")
 	}
 }
 
-func TestAsyncX(t *testing.T) {
-	t.Parallel()
+func TestAsyncX(t *testing.T) { //nolint:paralleltest
+	// t.Parallel()
 	testWithTimeout(t, 100*time.Millisecond)
-	is := assert.New(t)
 
-	{
+	t.Run("Async0", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async0(func() {
@@ -103,9 +111,12 @@ func TestAsyncX(t *testing.T) {
 		case <-time.After(time.Millisecond):
 			is.Fail("Async0 should not block")
 		}
-	}
+	})
 
-	{
+	t.Run("Async1", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async1(func() int {
@@ -117,13 +128,16 @@ func TestAsyncX(t *testing.T) {
 
 		select {
 		case result := <-ch:
-			is.Equal(result, 10)
+			is.Equal(10, result)
 		case <-time.After(time.Millisecond):
 			is.Fail("Async1 should not block")
 		}
-	}
+	})
 
-	{
+	t.Run("Async2", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async2(func() (int, string) {
@@ -135,13 +149,16 @@ func TestAsyncX(t *testing.T) {
 
 		select {
 		case result := <-ch:
-			is.Equal(result, Tuple2[int, string]{10, "Hello"})
+			is.Equal(Tuple2[int, string]{10, "Hello"}, result)
 		case <-time.After(time.Millisecond):
 			is.Fail("Async2 should not block")
 		}
-	}
+	})
 
-	{
+	t.Run("Async3", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async3(func() (int, string, bool) {
@@ -153,13 +170,16 @@ func TestAsyncX(t *testing.T) {
 
 		select {
 		case result := <-ch:
-			is.Equal(result, Tuple3[int, string, bool]{10, "Hello", true})
+			is.Equal(Tuple3[int, string, bool]{10, "Hello", true}, result)
 		case <-time.After(time.Millisecond):
 			is.Fail("Async3 should not block")
 		}
-	}
+	})
 
-	{
+	t.Run("Async4", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async4(func() (int, string, bool, float64) {
@@ -171,13 +191,16 @@ func TestAsyncX(t *testing.T) {
 
 		select {
 		case result := <-ch:
-			is.Equal(result, Tuple4[int, string, bool, float64]{10, "Hello", true, 3.14})
+			is.Equal(Tuple4[int, string, bool, float64]{10, "Hello", true, 3.14}, result)
 		case <-time.After(time.Millisecond):
 			is.Fail("Async4 should not block")
 		}
-	}
+	})
 
-	{
+	t.Run("Async5", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async5(func() (int, string, bool, float64, string) {
@@ -189,13 +212,16 @@ func TestAsyncX(t *testing.T) {
 
 		select {
 		case result := <-ch:
-			is.Equal(result, Tuple5[int, string, bool, float64, string]{10, "Hello", true, 3.14, "World"})
+			is.Equal(Tuple5[int, string, bool, float64, string]{10, "Hello", true, 3.14, "World"}, result)
 		case <-time.After(time.Millisecond):
 			is.Fail("Async5 should not block")
 		}
-	}
+	})
 
-	{
+	t.Run("Async6", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
+		is := assert.New(t)
+
 		sync := make(chan struct{})
 
 		ch := Async6(func() (int, string, bool, float64, string, int) {
@@ -207,40 +233,36 @@ func TestAsyncX(t *testing.T) {
 
 		select {
 		case result := <-ch:
-			is.Equal(result, Tuple6[int, string, bool, float64, string, int]{10, "Hello", true, 3.14, "World", 100})
+			is.Equal(Tuple6[int, string, bool, float64, string, int]{10, "Hello", true, 3.14, "World", 100}, result)
 		case <-time.After(time.Millisecond):
 			is.Fail("Async6 should not block")
 		}
-	}
+	})
 }
 
-func TestWaitFor(t *testing.T) {
-	t.Parallel()
+func TestWaitFor(t *testing.T) { //nolint:paralleltest
+	// t.Parallel()
 
-	testTimeout := 100 * time.Millisecond
-	longTimeout := 2 * testTimeout
-	shortTimeout := 4 * time.Millisecond
+	t.Run("exist condition works", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-	t.Run("exist condition works", func(t *testing.T) {
-		t.Parallel()
-
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 300*time.Millisecond)
 		is := assert.New(t)
 
 		laterTrue := func(i int) bool {
 			return i >= 5
 		}
 
-		iter, duration, ok := WaitFor(laterTrue, longTimeout, time.Millisecond)
+		iter, duration, ok := WaitFor(laterTrue, 200*time.Millisecond, 10*time.Millisecond)
 		is.Equal(6, iter, "unexpected iteration count")
-		is.InEpsilon(6*time.Millisecond, duration, float64(500*time.Microsecond))
+		is.InDelta(60*time.Millisecond, duration, float64(5*time.Millisecond))
 		is.True(ok)
 	})
 
-	t.Run("counter is incremented", func(t *testing.T) {
-		t.Parallel()
+	t.Run("counter is incremented", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 100*time.Millisecond)
 		is := assert.New(t)
 
 		counter := 0
@@ -250,80 +272,63 @@ func TestWaitFor(t *testing.T) {
 			return false
 		}
 
-		iter, duration, ok := WaitFor(alwaysFalse, shortTimeout, 1050*time.Microsecond)
+		iter, duration, ok := WaitFor(alwaysFalse, 40*time.Millisecond, 10*time.Millisecond)
 		is.Equal(counter, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
+		is.InDelta(40*time.Millisecond, duration, float64(5*time.Millisecond))
 		is.False(ok)
 	})
 
 	alwaysTrue := func(_ int) bool { return true }
 	alwaysFalse := func(_ int) bool { return false }
 
-	t.Run("short timeout works", func(t *testing.T) {
-		t.Parallel()
+	t.Run("timeout works", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 200*time.Millisecond)
 		is := assert.New(t)
 
-		iter, duration, ok := WaitFor(alwaysFalse, shortTimeout, 10*time.Millisecond)
-		is.Equal(0, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
+		iter, duration, ok := WaitFor(alwaysFalse, 50*time.Millisecond, 100*time.Millisecond)
+		is.Zero(iter, "unexpected iteration count")
+		is.InDelta(50*time.Millisecond, duration, float64(10*time.Millisecond))
 		is.False(ok)
 	})
 
-	t.Run("timeout works", func(t *testing.T) {
-		t.Parallel()
+	t.Run("exist on first condition", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 200*time.Millisecond)
 		is := assert.New(t)
 
-		shortTimeout := 4 * time.Millisecond
-		iter, duration, ok := WaitFor(alwaysFalse, shortTimeout, 10*time.Millisecond)
-		is.Equal(0, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
-		is.False(ok)
-	})
-
-	t.Run("exist on first condition", func(t *testing.T) {
-		t.Parallel()
-
-		testWithTimeout(t, testTimeout)
-		is := assert.New(t)
-
-		iter, duration, ok := WaitFor(alwaysTrue, 10*time.Millisecond, time.Millisecond)
+		iter, duration, ok := WaitFor(alwaysTrue, 100*time.Millisecond, 30*time.Millisecond)
 		is.Equal(1, iter, "unexpected iteration count")
-		is.InEpsilon(time.Millisecond, duration, float64(5*time.Microsecond))
+		is.InDelta(30*time.Millisecond, duration, float64(10*time.Millisecond))
 		is.True(ok)
 	})
 }
 
-func TestWaitForWithContext(t *testing.T) {
-	t.Parallel()
+func TestWaitForWithContext(t *testing.T) { //nolint:paralleltest
+	// t.Parallel()
 
-	testTimeout := 100 * time.Millisecond
-	longTimeout := 2 * testTimeout
-	shortTimeout := 4 * time.Millisecond
+	t.Run("exist condition works", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-	t.Run("exist condition works", func(t *testing.T) {
-		t.Parallel()
-
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 200*time.Millisecond)
 		is := assert.New(t)
 
 		laterTrue := func(_ context.Context, i int) bool {
 			return i >= 5
 		}
 
-		iter, duration, ok := WaitForWithContext(context.Background(), laterTrue, longTimeout, time.Millisecond)
+		iter, duration, ok := WaitForWithContext(context.Background(), laterTrue, 200*time.Millisecond, 10*time.Millisecond)
 		is.Equal(6, iter, "unexpected iteration count")
-		is.InEpsilon(6*time.Millisecond, duration, float64(500*time.Microsecond))
+		is.InDelta(60*time.Millisecond, duration, float64(5*time.Millisecond))
 		is.True(ok)
 	})
 
-	t.Run("counter is incremented", func(t *testing.T) {
-		t.Parallel()
+	t.Run("counter is incremented", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 150*time.Millisecond)
 		is := assert.New(t)
 
 		counter := 0
@@ -333,81 +338,68 @@ func TestWaitForWithContext(t *testing.T) {
 			return false
 		}
 
-		iter, duration, ok := WaitForWithContext(context.Background(), alwaysFalse, shortTimeout, 1050*time.Microsecond)
+		iter, duration, ok := WaitForWithContext(context.Background(), alwaysFalse, 80*time.Millisecond, 20*time.Millisecond)
 		is.Equal(counter, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
+		is.InDelta(80*time.Millisecond, duration, float64(10*time.Millisecond))
 		is.False(ok)
 	})
 
 	alwaysTrue := func(_ context.Context, _ int) bool { return true }
 	alwaysFalse := func(_ context.Context, _ int) bool { return false }
 
-	t.Run("short timeout works", func(t *testing.T) {
-		t.Parallel()
+	t.Run("timeout works", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 200*time.Millisecond)
 		is := assert.New(t)
 
-		iter, duration, ok := WaitForWithContext(context.Background(), alwaysFalse, shortTimeout, 10*time.Millisecond)
-		is.Equal(0, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
+		iter, duration, ok := WaitForWithContext(context.Background(), alwaysFalse, 50*time.Millisecond, 100*time.Millisecond)
+		is.Zero(iter, "unexpected iteration count")
+		is.InDelta(50*time.Millisecond, duration, float64(10*time.Millisecond))
 		is.False(ok)
 	})
 
-	t.Run("timeout works", func(t *testing.T) {
-		t.Parallel()
+	t.Run("exist on first condition", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 200*time.Millisecond)
 		is := assert.New(t)
 
-		shortTimeout := 4 * time.Millisecond
-		iter, duration, ok := WaitForWithContext(context.Background(), alwaysFalse, shortTimeout, 10*time.Millisecond)
-		is.Equal(0, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
-		is.False(ok)
-	})
-
-	t.Run("exist on first condition", func(t *testing.T) {
-		t.Parallel()
-
-		testWithTimeout(t, testTimeout)
-		is := assert.New(t)
-
-		iter, duration, ok := WaitForWithContext(context.Background(), alwaysTrue, 10*time.Millisecond, time.Millisecond)
+		iter, duration, ok := WaitForWithContext(context.Background(), alwaysTrue, 100*time.Millisecond, 10*time.Millisecond)
 		is.Equal(1, iter, "unexpected iteration count")
-		is.InEpsilon(time.Millisecond, duration, float64(5*time.Microsecond))
+		is.InDelta(10*time.Millisecond, duration, float64(5*time.Millisecond))
 		is.True(ok)
 	})
 
-	t.Run("context cancellation stops everything", func(t *testing.T) {
-		t.Parallel()
+	t.Run("context cancellation stops everything", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 100*time.Millisecond)
 		is := assert.New(t)
 
-		expiringCtx, clean := context.WithTimeout(context.Background(), 8*time.Millisecond)
+		expiringCtx, clean := context.WithTimeout(context.Background(), 45*time.Millisecond)
 		t.Cleanup(func() {
 			clean()
 		})
 
-		iter, duration, ok := WaitForWithContext(expiringCtx, alwaysFalse, 100*time.Millisecond, 3*time.Millisecond)
-		is.Equal(2, iter, "unexpected iteration count")
-		is.InEpsilon(10*time.Millisecond, duration, float64(500*time.Microsecond))
+		iter, duration, ok := WaitForWithContext(expiringCtx, alwaysFalse, 100*time.Millisecond, 30*time.Millisecond)
+		is.Equal(1, iter, "unexpected iteration count")
+		is.InDelta(45*time.Millisecond, duration, float64(10*time.Millisecond))
 		is.False(ok)
 	})
 
-	t.Run("canceled context stops everything", func(t *testing.T) {
-		t.Parallel()
+	t.Run("canceled context stops everything", func(t *testing.T) { //nolint:paralleltest
+		// t.Parallel()
 
-		testWithTimeout(t, testTimeout)
+		testWithTimeout(t, 200*time.Millisecond)
 		is := assert.New(t)
 
 		canceledCtx, cancel := context.WithCancel(context.Background())
 		cancel()
 
-		iter, duration, ok := WaitForWithContext(canceledCtx, alwaysFalse, 100*time.Millisecond, 1050*time.Microsecond)
-		is.Equal(0, iter, "unexpected iteration count")
-		is.InEpsilon(1*time.Millisecond, duration, float64(5*time.Microsecond))
+		iter, duration, ok := WaitForWithContext(canceledCtx, alwaysFalse, 100*time.Millisecond, 30*time.Millisecond)
+		is.Zero(iter, "unexpected iteration count")
+		is.InDelta(1*time.Millisecond, duration, float64(1*time.Millisecond))
 		is.False(ok)
 	})
 }
